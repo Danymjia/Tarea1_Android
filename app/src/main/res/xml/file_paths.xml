@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Ruta externa para archivos -->
     <external-path name="external_files" path="." />
+
+    <!-- Ruta de cache -->
     <cache-path name="cache" path="." />
+
+    <!-- Ruta para archivos externos de la app (usado por el código) -->
+    <external-files-path
+        name="accident_images"
+        path="/" />
 </paths>

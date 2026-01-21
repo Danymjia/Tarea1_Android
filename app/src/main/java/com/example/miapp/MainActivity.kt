@@ -6,19 +6,22 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.miapp.data.AccidentManager
 import com.example.miapp.ui.theme.MiAppTheme
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,8 +29,80 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MiAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ComponentesBasicos(modifier = Modifier.padding(innerPadding))
+                MainScreen()
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen() {
+    val context = LocalContext.current
+    val accidents = AccidentManager.getAccidents()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Registro de Accidentes") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    val intent = Intent(context, RegisterAccidentActivity::class.java)
+                    context.startActivity(intent)
+                }
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Registrar accidente")
+            }
+        }
+    ) { paddingValues ->
+        if (accidents.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "No hay accidentes registrados",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Presiona + para registrar un nuevo accidente",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(accidents) { accident ->
+                    AccidentCard(accident)
                 }
             }
         }
@@ -35,167 +110,94 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ComponentesBasicos(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
+fun AccidentCard(accident: com.example.miapp.data.Accident) {
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
-    // Estado para los componentes interactivos
-    var texto by remember { mutableStateOf("") }
-    var checked by remember { mutableStateOf(false) }
-    var switchActivo by remember { mutableStateOf(false) }
-    var contador by remember { mutableIntStateOf(0) }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        // 1. TEXT - Texto simple y estilizado
-        Text(
-            text = "Componentes Básicos",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 2. TEXTFIELD - Campo de entrada
-        TextField(
-            value = texto,
-            onValueChange = { texto = it },
-            label = { Text("Escribe tu nombre") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Mostrar lo que escribió el usuario
-        if (texto.isNotEmpty()) {
-            Text(text = "Hola, $texto!", fontSize = 18.sp)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 3. BUTTON - Botón
-        Button(onClick = { contador++ }) {
-            Text("Presionado: $contador veces")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Botón con borde (outlined)
-        OutlinedButton(onClick = { contador = 0 }) {
-            Text("Reiniciar contador")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 4. ROW - Fila horizontal con Checkbox y Switch
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // CHECKBOX
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = checked,
-                    onCheckedChange = { checked = it }
-                )
-                Text("Acepto")
-            }
-
-            // SWITCH
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Modo oscuro")
-                Switch(
-                    checked = switchActivo,
-                    onCheckedChange = { switchActivo = it }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 5. CARD - Tarjeta
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Esta es una Card", fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Las cards son útiles para agrupar contenido relacionado.")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 6. BOX - Superposición
-        Box(
+        Column(
             modifier = Modifier
-                .size(100.dp)
-                .padding(8.dp),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Card(
-                modifier = Modifier.fillMaxSize(),
-                colors = CardDefaults.cardColors(containerColor = Color.LightGray)
-            ) {}
-            Text("Centrado", fontWeight = FontWeight.Bold)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = accident.tipoAccidente,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = dateFormat.format(accident.fecha),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Divider()
+            Spacer(modifier = Modifier.height(12.dp))
+
+            InfoRow("Matrícula", accident.matricula)
+            InfoRow("Conductor", accident.nombreConductor)
+            InfoRow("Cédula", accident.cedulaConductor)
+
+            if (accident.observaciones.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Observaciones:",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = accident.observaciones,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "📍 ${accident.latitud}, ${accident.longitud}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Text(
+                    text = "📷 ${accident.fotos.size} foto(s)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 7. Texto con color condicional
-        Text(
-            text = if (switchActivo) "Switch está ON" else "Switch está OFF",
-            color = if (switchActivo) Color.Green else Color.Red,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 8. BOTÓN PARA IR A LA CÁMARA
-        Button(
-            onClick = {
-                val intent = Intent(context, CameraActivity::class.java)
-                context.startActivity(intent)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary
-            )
-        ) {
-            Text("Abrir Cámara")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 9. BOTÓN PARA IR A LOCALIZACIÓN
-        Button(
-            onClick = {
-                val intent = Intent(context, LocationActivity::class.java)
-                context.startActivity(intent)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.tertiary
-            )
-        ) {
-            Text("Obtener Ubicación")
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun ComponentesBasicosPreview() {
-    MiAppTheme {
-        ComponentesBasicos()
+fun InfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)
+    ) {
+        Text(
+            text = "$label: ",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.width(100.dp)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }

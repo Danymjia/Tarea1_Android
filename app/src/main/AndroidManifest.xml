@@ -9,6 +9,9 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <!-- Permiso de vibracion -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <!-- Para guardar fotos (Android 12 y menores) -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -44,6 +47,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- *** NUEVA ACTIVIDAD: Registro de Accidentes *** -->
+        <activity
+            android:name=".RegisterAccidentActivity"
+            android:exported="false"
+            android:label="Registrar Accidente"
+            android:theme="@style/Theme.MiApp" />
 
         <!-- Actividad de la Cámara -->
         <activity
